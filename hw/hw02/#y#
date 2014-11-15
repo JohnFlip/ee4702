@@ -1,0 +1,153 @@
+/// LSU EE 4702-1 (Fall 2014), GPU Programming
+//
+ /// Homework 2
+ //
+ /// Your Name:
+
+ /// Instructions
+ //
+ //  Read the assignment: http://www.ece.lsu.edu/koppel/gpup/2014/hw02.pdf
+
+
+/// Purpose
+//
+//   Demonstrate simulation of string modeled as point masses and springs
+
+
+/// What Code Does
+
+// Simulates a string of beads over a platform. The string is modeled
+// as point masses connected by springs with a long relaxed
+// length. The platform consists of tiles, some are purple-tinted
+// mirrors (showing a reflection of the ball), the others show the
+// course syllabus.
+
+
+///  Keyboard Commands
+ //
+ /// Object (Eye, Light, Ball) Location or Push
+ //   Arrows, Page Up, Page Down
+ //        Move object or push ball, depending on mode.
+ //        With shift key pressed, motion is 5x faster.
+ //   'e': Move eye.
+ //   'l': Move light.
+ //   'b': Move head (first) ball. (Change position but not velocity.)
+ //   'B': Push head ball. (Add velocity.)
+ //
+ /// Eye Direction
+ //   Home, End, Delete, Insert
+ //   Turn the eye direction.
+ //   Home should rotate eye direction up, End should rotate eye
+ //   down, Delete should rotate eye left, Insert should rotate eye
+ //   right.  The eye direction vector is displayed in the upper left.
+
+ /// Simulation Options
+ //  (Also see variables below.)
+ //
+ //  'w'    Turn twirling on and off. (Problem 2 solution.)
+ //  '1'    Set up scene 1.
+ //  '2'    Set up scene 2.
+ //  '3'    Set up scene 3.
+ //  'p'    Pause simulation. (Press again to resume.)
+ //  ' '    (Space bar.) Advance simulation by 1/30 second.
+ //  'S- '  (Shift-space bar.) Advance simulation by one time step.
+ //  'h'    Freeze position of first (head) ball. (Press again to release.)
+ //  't'    Freeze position of last (tail) ball. (Press again to release.)
+ //  's'    Stop balls.
+ //  'g'    Turn gravity on and off.
+ //  'F12'  Write screenshot to file.
+
+ /// Variables
+ //   Selected program variables can be modified using the keyboard.
+ //   Use "Tab" to cycle through the variable to be modified, the
+ //   name of the variable is displayed next to "VAR" on the bottom
+ //   line of green text.
+
+ //  'Tab' Cycle to next variable.
+ //  '`'   Cycle to previous variable.
+ //  '+'   Increase variable value.
+ //  '-'   Decrease variable value.
+ //
+ //  VAR Spring Constant - Set spring constant.
+ //  VAR Air Resistance - Set air resistance.
+ //  VAR Light Intensity - The light intensity.
+ //  VAR Gravity - Gravitational acceleration. (Turn on/off using 'g'.)
+
+
+#define GL_GLEXT_PROTOTYPES
+#define GLX_GLXEXT_PROTOTYPES
+
+#include <GL/gl.h>
+#include <GL/glext.h>
+#include <GL/glx.h>
+#include <GL/glxext.h>
+#include <GL/glu.h>
+#include <GL/freeglut.h>
+
+#include <gp/util.h>
+#include <gp/glextfuncs.h>
+#include <gp/coord.h>
+#include <gp/shader.h>
+#include <gp/pstring.h>
+#include <gp/misc.h>
+#include <gp/gl-buffer.h>
+#include <gp/texture-util.h>
+
+#include "shapes.h"
+
+
+///
+/// Main Data Structures
+///
+//
+// class World: All data about scene.
+
+
+class World;
+
+
+// Object Holding Ball State
+//
+class Ball {
+public:
+  pCoor position;
+  pVect velocity;
+
+  float mass;
+  float radius;
+
+  bool contact;                 // Can be used for special effects.
+
+  void push(pVect amt);
+  void translate(pVect amt);
+  void stop();
+  void freeze();
+};
+
+enum Render_Option { RO_Normally, RO_Simple, RO_Shadow_Volumes };
+
+class World {
+public:
+  World(pOpenGL_Helper &fb):ogl_helper(fb){init();}
+  void init();
+  void init_graphics();
+  static void frame_callback_w(void *moi){((World*)moi)->frame_callback();}
+  void frame_callback();
+  void render();
+  void render_spiral0();
+  void render_spiral1();
+  void render_spiral2();
+  void render_objects(Render_Option render_option);
+  void cb_keyboard();
+  void modelview_update();
+
+  pOpenGL_Helper& ogl_helper;
+  pVariable_Control variable_control;
+  pFrame_Timer frame_timer;
+  double world_time;
+  double last_frame_wall_time;
+  int time_step_count;
+  float opt_gravity_accel;      // Value chosen by user.
+  pVect gravity_accel;          // Set to zero when opt_gravity is false;
+  bool opt_gravity;
+  bool opt_head_lock, op
